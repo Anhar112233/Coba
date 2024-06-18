@@ -3,24 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Input dan Tabel dengan Firebase</title>
+    <title>Daftar anggota dusun karopo</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
-        #inputForm {
+        #inputForm, #editForm {
             display: none;
         }
 
+        body {
+            background-image: url('edit.jpg'); /* URL gambar latar belakang */
+            background-size: cover; /* Mengatur gambar agar mencakup seluruh area */
+            background-repeat: no-repeat; /* Menghindari pengulangan gambar */
+            background-position: center center; /* Posisi gambar di tengah */
+            background-color: rgba(52, 58, 64, 0.7); /* Warna latar belakang dengan transparansi */
+            color: #ffffff; /* Warna teks putih */
+        }
 
+        .container {
+            background-color: rgba(0, 0, 0, 0.5); /* Transparansi pada container */
+            padding: 10px; /* Ruang di dalam container */
+            background-size: 100℅/* Tampilan melengkung pada sudut container */
+        }
 
+        /* Gaya khusus untuk tombol dan tabel */
+        .btn {
+            color: #ffffff; /* warna teks tombol putih */
+        }
+
+        .table {
+            color: #ffffff; /* warna teks tabel putih */
+        }
+
+        /* Gaya tambahan jika dibutuhkan */
+        .form-control {
+            background-color: #454d55; /* warna background input */
+            color: #ffffff; /* warna teks input putih */
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="d-flex justify-content-between">
-            <h2>Daftar Mahasiswa</h2>
+            <h2>Daftar Anggota dusun karopo</h2>
             <button onclick="showFormBtn()" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Tambah Data
             </button>
@@ -32,32 +60,52 @@
                 <input type="text" class="form-control" id="nama" placeholder="Masukkan Nama">
             </div>
             <div class="form-group">
-                <label for="alamat">Alamat</label>
-                <input type="text" class="form-control" id="alamat" placeholder="Masukkan Alamat">
+                <label for="alamat">No.Hp</label>
+                <input type="number" class="form-control" id="alamat" placeholder="Masukkan No.Hp">
             </div>
             <div class="form-group">
-                <label for="jurusan">Jurusan</label>
-                <input type="text" class="form-control" id="jurusan" placeholder="Masukkan Jurusan">
+                <label for="jurusan">Usia</label>
+                <input type="number" class="form-control" id="jurusan" placeholder="Masukkan Usia">
             </div>
             <button type="button" class="btn btn-success" onclick="addDataBtn()">Tambah</button>
             <button type="button" class="btn btn-secondary" onclick="closeFormBtn()">Tutup</button>
         </form>
 
+        <form id="editForm" class="mt-3">
+            <div class="form-group">
+                <label for="editNama">Nama</label>
+                <input type="text" class="form-control" id="editNama" placeholder="Masukkan Nama">
+            </div>
+            <div class="form-group">
+                <label for="editAlamat">No.Hp</label>
+                <input type="number" class="form-control" id="editAlamat" placeholder="Masukkan No.Hp">
+            </div>
+            <div class="form-group">
+                <label for="editJurusan">Usia</label>
+                <input type="number" class="form-control" id="editJurusan" placeholder="Masukkan Usia">
+            </div>
+            <button type="button" class="btn btn-success" onclick="saveEditBtn()">Simpan</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditFormBtn()">Tutup</button>
+            <input type="hidden" id="editIndex">
+        </form>
+    
+  <div class="table-responsive">
         <table class="table table-bordered mt-3" id="dataTable">
             <thead>
                 <tr>
                     <th>No</th>
                     <th>Nama</th>
-                    <th>Alamat</th>
-                    <th>Jurusan</th>
+                    <th>No.Hp</th>
+                    <th>Usia</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody id="databody">
                 <!-- Data akan ditambahkan di sini -->
             </tbody>
         </table>
-    </div>
-
+  </div>
+      </div>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
@@ -86,6 +134,7 @@
     function addToTable(data, index) {
         // Buat elemen baris baru
         const tr = document.createElement('tr');
+        tr.setAttribute('id', 'row-' + index);
 
         // Tambah nomor urut
         const tdNo = document.createElement('td');
@@ -106,6 +155,24 @@
         const tdJurusan = document.createElement('td');
         tdJurusan.textContent = data.jurusan;
         tr.appendChild(tdJurusan);
+
+        // Buat dan tambahkan kolom untuk aksi (edit dan hapus)
+        const tdAksi = document.createElement('td');
+        tdAksi.className = 'd-flex justify-content-between';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn btn-warning mr-2';
+        editButton.innerHTML = '<i class="fas fa-edit"></i>';
+        editButton.setAttribute('onclick', 'showEditForm(' + index + ')');
+        tdAksi.appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger';
+        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteButton.setAttribute('onclick', 'deleteData(' + index + ')');
+        tdAksi.appendChild(deleteButton);
+
+        tr.appendChild(tdAksi);
 
         // Tambahkan baris ke tbody
         document.getElementById('databody').appendChild(tr);
@@ -161,6 +228,82 @@
         document.getElementById('inputForm').style.display = 'block';
     }
 
+    // Fungsi untuk menghapus data dari Firebase dan tabel
+    function deleteData(index) {
+        // Tampilkan konfirmasi sebelum menghapus
+        const confirmation = confirm('Apakah Anda yakin ingin menghapus data ini?');
+        if (confirmation) {
+            // Hapus data dari Firebase
+            firebase.database().ref('siswa/' + index).remove(function(error) {
+                if (error) {
+                    alert('Data tidak berhasil dihapus: ' + error.message);
+                } else {
+                    // Data berhasil dihapus, hapus dari tabel
+                    const row = document.getElementById('row-' + index);
+                    row.parentNode.removeChild(row);
+                }
+            });
+        }
+    }
+
+    // Fungsi untuk menampilkan form edit dengan data yang ada
+    function showEditForm(index) {
+        const databaseRef = firebase.database().ref('siswa/' + index);
+        databaseRef.once('value', function(snapshot) {
+            const data = snapshot.val();
+            document.getElementById('editNama').value = data.nama;
+            document.getElementById('editAlamat').value = data.alamat;
+            document.getElementById('editJurusan').value = data.jurusan;
+            document.getElementById('editIndex').value = index;
+
+            // Tampilkan form edit
+            document.getElementById('editForm').style.display = 'block';
+        });
+    }
+
+    // Fungsi untuk menutup form edit
+    function closeEditFormBtn() {
+        document.getElementById('editForm').style.display = 'none';
+    }
+
+    // Fungsi untuk menyimpan data yang telah diedit
+    function saveEditBtn() {
+        // Ambil nilai input dari form edit
+        const nama = document.getElementById('editNama').value;
+        const alamat = document.getElementById('editAlamat').value;
+        const jurusan = document.getElementById('editJurusan').value;
+        const index = document.getElementById('editIndex').value;
+
+        // Periksa jika input kosong
+        if (!nama || !alamat || !jurusan) {
+            alert('Semua field harus diisi!');
+            return;
+        }
+
+        // Buat objek data
+        const data = {
+            nama: nama,
+            alamat: alamat,
+            jurusan: jurusan
+        };
+
+        // Simpan data yang telah diedit ke Firebase
+        firebase.database().ref('siswa/' + index).set(data, function(error) {
+            if (error) {
+                alert('Data tidak berhasil disimpan: ' + error.message);
+            } else {
+                // Perbarui tabel
+                const row = document.getElementById('row-' + index);
+                row.cells[1].textContent = data.nama;
+                row.cells[2].textContent = data.alamat;
+                row.cells[3].textContent = data.jurusan;
+
+                // Tutup form edit
+                closeEditFormBtn();
+            }
+        });
+    }
+
     // Membaca data dari Firebase dan menambahkannya ke tabel
     function fetchData() {
         const databaseRef = firebase.database().ref('siswa');
@@ -175,7 +318,6 @@
 
     // Panggil fetchData untuk membaca dan menampilkan data saat halaman dimuat
     window.onload = fetchData;
-
-</script>
+    </script>
 </body>
 </html>
